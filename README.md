@@ -29,10 +29,8 @@ firebase functions:secrets:set GOOGLE_CLIENT_ID
 firebase functions:secrets:set GOOGLE_CLIENT_SECRET
 firebase functions:secrets:set GOOGLE_REFRESH_TOKEN
 firebase functions:secrets:set DISCORD_WEBHOOK_URL
-firebase functions:params:set GOOGLE_CALENDAR_ID="primary"
 ```
 
-`GOOGLE_CALENDAR_ID` は対象のカレンダー ID に変更できます。
 
 6. デプロイ
 
