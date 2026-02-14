@@ -22,9 +22,10 @@ export const notifyDiscordBeforeEvent = onSchedule(
     ],
   },
   async () => {
-    const oneMinuteLater = Date.now() + 60 * 1000;
-    const windowStart = new Date(oneMinuteLater - 30 * 1000).toISOString();
-    const windowEnd = new Date(oneMinuteLater + 30 * 1000).toISOString();
+    const now = Date.now();
+    const oneMinuteLater = now + 60 * 1000;
+    const windowStart = new Date(now).toISOString();
+    const windowEnd = new Date(oneMinuteLater).toISOString();
 
     const auth = new google.auth.OAuth2(
       GOOGLE_CLIENT_ID.value(),
@@ -44,6 +45,17 @@ export const notifyDiscordBeforeEvent = onSchedule(
 
     for (const event of res.data.items ?? []) {
       if (!event.start?.dateTime || !event.id) continue;
+      const eventStartAt = new Date(event.start.dateTime).getTime();
+      const startBoundary = new Date(now).getTime();
+      const endBoundary = new Date(oneMinuteLater).getTime();
+      if (
+        Number.isNaN(eventStartAt) ||
+        eventStartAt < startBoundary ||
+        eventStartAt >= endBoundary
+      )
+        continue;
+      const startAtLabel = formatJst(event.start.dateTime ?? event.start.date);
+      const endAtLabel = formatJst(event.end?.dateTime ?? event.end?.date);
 
       await fetch(DISCORD_WEBHOOK_URL.value(), {
         method: 'POST',
@@ -62,6 +74,14 @@ export const notifyDiscordBeforeEvent = onSchedule(
                   name: '場所',
                   value: event.location ?? '（未設定）',
                 },
+                {
+                  name: '開始',
+                  value: startAtLabel,
+                },
+                {
+                  name: '終了',
+                  value: endAtLabel,
+                },
               ],
               timestamp: new Date().toISOString(),
               url: event.htmlLink,
@@ -72,3 +92,18 @@ export const notifyDiscordBeforeEvent = onSchedule(
     }
   }
 );
+
+const formatJst = (value?: string | null): string => {
+  if (!value) return '（未設定）';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '（未設定）';
+
+  return new Intl.DateTimeFormat('ja-JP', {
+    timeZone: 'Asia/Tokyo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+};
