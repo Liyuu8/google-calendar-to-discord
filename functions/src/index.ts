@@ -12,7 +12,7 @@ const DISCORD_WEBHOOK_URL = defineSecret('DISCORD_WEBHOOK_URL');
 
 export const notifyDiscordBeforeEvent = onSchedule(
   {
-    schedule: 'every 1 minutes',
+    schedule: 'every 5 minutes',
     timeZone: 'Asia/Tokyo',
     secrets: [
       GOOGLE_CLIENT_ID,
@@ -23,9 +23,9 @@ export const notifyDiscordBeforeEvent = onSchedule(
   },
   async () => {
     const now = Date.now();
-    const oneMinuteLater = now + 60 * 1000;
+    const fiveMinutesLater = now + 5 * 60 * 1000;
     const windowStart = new Date(now).toISOString();
-    const windowEnd = new Date(oneMinuteLater).toISOString();
+    const windowEnd = new Date(fiveMinutesLater).toISOString();
 
     const auth = new google.auth.OAuth2(
       GOOGLE_CLIENT_ID.value(),
@@ -47,7 +47,7 @@ export const notifyDiscordBeforeEvent = onSchedule(
       if (!event.start?.dateTime || !event.id) continue;
       const eventStartAt = new Date(event.start.dateTime).getTime();
       const startBoundary = new Date(now).getTime();
-      const endBoundary = new Date(oneMinuteLater).getTime();
+      const endBoundary = new Date(fiveMinutesLater).getTime();
       if (
         Number.isNaN(eventStartAt) ||
         eventStartAt < startBoundary ||
